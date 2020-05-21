@@ -87,15 +87,31 @@ def compare_layers(n_clicks, chosen_layers, chosen_class, img_pth):
     image = serve.get_resize_transform()(cv2.imread(img_pth))
     run_gradcam = serve.serve_gradcam(MODEL, TRANSFORMS, chosen_layers)
     cams = run_gradcam(image, int(chosen_class), DEVICE)
-    fig = visualize.create_subplots(cams, image)
+    fig = visualize.layer_comp_subplots(cams, image)
     return dcc.Graph(figure=fig)
 
 def compare_classes(n_clicks, chosen_layers, chosen_class1, chosen_class2, img_pth):
     # Compare Layers for Different Classes
-    pass
-
+    if (chosen_layers is None) or (chosen_class1 is None) or (chosen_class2 is None) or (img_pth is None):
+        return dash.no_update
+    
+    image = serve.get_resize_transform()(cv2.imread(img_pth))
+    run_gradcam = serve.serve_gradcam(MODEL, TRANSFORMS, chosen_layers)
+    cams1 = run_gradcam(image, int(chosen_class1), DEVICE)
+    cams2 = run_gradcam(image, int(chosen_class2), DEVICE)
+    fig = visualize.class_comp_subplots(cams1, cams2, , image)
+    return dcc.Graph(figure=fig)
+    
 def compare_images(n_clicks, chosen_layers, chosen_class, img_pth1, img_pth2):
     # Compare Layers for Two different Images for a Chosen Class
+    if (chosen_layers is None) or (chosen_class is None) or (img_pth1 is None) or (img_pth2 is None):
+        return dash.no_update
+    
+    image1 = serve.get_resize_transform()(cv2.imread(img_pth1))
+    image2 = serve.get_resize_transform()(cv2.imread(img_pth2))
+    run_gradcam = serve.serve_gradcam(MODEL, TRANSFORMS, chosen_layers)
+    cams1 = run_gradcam(image1, int(chosen_class), DEVICE)
+    cams2 = run_gradcam(image2, int(chosen_class), DEVICE)
     pass
     
 # ===== MAIN =================================================================
