@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torchvision.models as models
-from torchvision import transforms
+from torchvision import transforms            
 
 from VisualizeCNN.gradCam import GradCam
 
@@ -20,6 +20,12 @@ def get_conv_layers(model):
 def get_model_classes():
     return [("0", "0"), ("1", "1")]
 
+def inv_model_classes(model_classes):
+    inv_classes = {}
+    for name, val in model_classes:
+        inv_classes[val] = name
+    return inv_classes
+
 def get_resize_transform():
     return transforms.Compose([
         transforms.ToPILImage(),
@@ -33,7 +39,6 @@ def get_transforms():
         transforms.Normalize(mean=[0.485, 0.456, 0.406],
                              std=[0.229, 0.224, 0.225])
     ])
-
     return transform
         
 # ===== TOOLS ==================================================================
