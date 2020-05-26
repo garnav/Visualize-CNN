@@ -14,6 +14,7 @@ def layer_comp_subplots(cams, image):
         
     fig = create_subplots(all_heatmaps, image, subplot_titles=chosen_layers, row_titles=None, col_titles=None)
     fig.update_layout(title_text="GradCAM - Layer Comparisons")
+    fig.write_html(f"fig{len(chosen_layers)}.html")
     return fig
 
 # cam1 and cam2 should have the same keys
@@ -36,14 +37,15 @@ def image_comp_subplots(cam1, cam2, image):
 # all_heatmaps : N, W, H
 # subplot_titles should be None if no names are to be used
 def create_subplots(all_heatmaps, image, subplot_titles, row_titles, col_titles):
-    num_heatmaps = all_heatmaps.shape[0]
+    print(type(image))
+    num_heatmaps, y_shape, x_shape = all_heatmaps.shape
     num_col = 2
     num_row = math.ceil(num_heatmaps / num_col)
     
     all_specs = [[{} for _ in range(num_col)] for _ in range(num_row)]
     fig = make_subplots(rows=num_row, cols=num_col,
                         specs = all_specs,
-                        vertical_spacing=0.01,
+                        vertical_spacing=0.15/num_row, #TODO: Fix hardcoding
                         subplot_titles=subplot_titles,
                         row_titles=row_titles, 
                         column_titles=col_titles)
@@ -51,13 +53,23 @@ def create_subplots(all_heatmaps, image, subplot_titles, row_titles, col_titles)
         r = math.floor(i / num_col) + 1
         c = (i % num_col) + 1
         
-        fig.add_trace(go.Image(z=image), 
-                      row=r, col=c)
+        fig.add_layout_image(dict(
+                  source=image, 
+                  xref=f"x{i + 1}",
+                  yref=f"y{i + 1}",
+                  x=0, 
+                  y=y_shape,
+                  sizex=x_shape,
+                  sizey=y_shape, 
+                  sizing='stretch',
+                  layer="below"), row=r, col=c)
         fig.add_trace(go.Heatmap(z=all_heatmaps[i, :, :], 
-                                 opacity=0.6, 
-                                 colorbar=dict(len=(1/num_row), 
-                                               yanchor="bottom")), 
-                      row=r, col=c)
-        
-    fig.update_layout(height=(500 * num_row))
+                                  opacity=0.6, 
+                                  colorbar=dict(len=(1/num_row), 
+                                                yanchor="bottom")), 
+                       row=r, col=c)
+        fig['layout'][f"xaxis{i + 1}"]['showgrid'] = False
+        fig['layout'][f"yaxis{i + 1}"]['showgrid'] = False
+
+    fig.update_layout(height=(400 * num_row)) # TODO: Don't want a hardcoding here
     return fig

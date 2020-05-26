@@ -1,6 +1,7 @@
 import base64
 import cv2
 import io
+import numpy as np
 import os
 from PIL import Image
 
@@ -47,7 +48,7 @@ MAP_TABS = {
         'plot' : 'multiple-images-plot'
     },
     'multiple-classes-tab' : {
-        'name' : 'Compare Layers and Classes for a Single Image',
+        'name' : 'Compare Layers & Classes for a Single Image',
         'image' : ['multiple-classes-choose-image'],
         'image-display' : ['multiple-classes-display-image'],
         'class' : ['multiple-classes-choose-class1', 
@@ -157,8 +158,6 @@ def compare_layers(n_clicks, chosen_layers, chosen_class, img_pths):
     img_pth = img_pths[0]    
     if (chosen_layers is None) or (chosen_class is None) or (img_pth is None):
         return dash.no_update
-    print(img_pth)
-    print(type(cv2.imread(img_pth)))
     image = cv2.imread(img_pth)
     run_gradcam = serve.serve_gradcam(MODEL, TRANSFORMS, chosen_layers)
     cams = run_gradcam(image, int(chosen_class), DEVICE)
@@ -181,6 +180,8 @@ def compare_classes(n_clicks, chosen_layers, chosen_class1, chosen_class2, img_p
     run_gradcam = serve.serve_gradcam(MODEL, TRANSFORMS, chosen_layers)
     cams1 = run_gradcam(image, int(chosen_class1), DEVICE)
     cams2 = run_gradcam(image, int(chosen_class2), DEVICE)
+    np.save("cams1.npy", cams1, allow_pickle=True)
+    np.save("cams2.npy", cams2, allow_pickle=True)
     fig = visualize.class_comp_subplots(cams1, cams2, 
                                         [INV_MODEL_CLASSES[chosen_class1], INV_MODEL_CLASSES[chosen_class2]], 
                                         serve.get_resize_transform()(image))
@@ -281,7 +282,7 @@ app.layout = html.Div([
                                 style={'width': '25%', 'display': 'inline-block', 'float' : 'left'}), 
                        html.Div(id='plot',
                                 style={'width': '74%', 'display': 'inline-block', 'float' : 'right', 
-                                       'textAlign' : 'center', 'overflowY' : 'scroll', 'height' : '95vh'})])                       
+                                       'textAlign' : 'center', 'overflowY' : 'scroll', 'height' : '95vh'})])                  
 ])
 
 if __name__ == "__main__":
