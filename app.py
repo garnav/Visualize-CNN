@@ -180,8 +180,7 @@ def compare_classes(n_clicks, chosen_layers, chosen_class1, chosen_class2, img_p
     run_gradcam = serve.serve_gradcam(MODEL, TRANSFORMS, chosen_layers)
     cams1 = run_gradcam(image, int(chosen_class1), DEVICE)
     cams2 = run_gradcam(image, int(chosen_class2), DEVICE)
-    np.save("cams1.npy", cams1, allow_pickle=True)
-    np.save("cams2.npy", cams2, allow_pickle=True)
+
     fig = visualize.class_comp_subplots(cams1, cams2, 
                                         [INV_MODEL_CLASSES[chosen_class1], INV_MODEL_CLASSES[chosen_class2]], 
                                         serve.get_resize_transform()(image))
@@ -203,7 +202,10 @@ def compare_images(n_clicks, chosen_layers, chosen_class, img_pths):
     run_gradcam = serve.serve_gradcam(MODEL, TRANSFORMS, chosen_layers)
     cams1 = run_gradcam(image1, int(chosen_class), DEVICE)
     cams2 = run_gradcam(image2, int(chosen_class), DEVICE)
-    pass
+    
+    fig = visualize.image_comp_subplots(cams1, cams2, 
+                                        serve.get_resize_transform()(image1), serve.get_resize_transform()(image2))
+    return dcc.Graph(figure=fig)
 
 # ===== TABS =================================================================
 def single_image_tab():

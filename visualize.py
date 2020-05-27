@@ -12,9 +12,9 @@ def layer_comp_subplots(cams, image):
     for i, layer in enumerate(chosen_layers):
         all_heatmaps[i, :, :] = cams[layer][0, :, :]
         
-    fig = create_subplots(all_heatmaps, image, subplot_titles=chosen_layers, row_titles=None, col_titles=None)
+    fig = create_subplots(all_heatmaps, [image, image], 
+                          subplot_titles=chosen_layers, row_titles=None, col_titles=None)
     fig.update_layout(title_text="GradCAM - Layer Comparisons")
-    fig.write_html(f"fig{len(chosen_layers)}.html")
     return fig
 
 # cam1 and cam2 should have the same keys
@@ -24,20 +24,31 @@ def class_comp_subplots(cam1, cam2, class_names, image):
     height, width = sample_cam.shape[1:]
     all_heatmaps = np.zeros((len(chosen_layers * 2),  height, width), dtype=sample_cam.dtype)
     for i, layer in enumerate(chosen_layers):
-        all_heatmaps[i, :, :] = cam1[layer][0, :, :]
-        all_heatmaps[i + 1, :, :] = cam2[layer][0, :, :]
+        all_heatmaps[2*i, :, :] = cam1[layer][0, :, :]
+        all_heatmaps[(2*i) + 1, :, :] = cam2[layer][0, :, :]
     
-    fig = create_subplots(all_heatmaps, image, subplot_titles=None, row_titles=chosen_layers, col_titles=class_names)   
+    fig = create_subplots(all_heatmaps, [image, image], 
+                          subplot_titles=None, row_titles=chosen_layers, col_titles=class_names)   
     fig.update_layout(title_text="GradCAM - Layer & Class Comparisons")
     return fig
 
-def image_comp_subplots(cam1, cam2, image):
-    pass
+def image_comp_subplots(cam1, cam2, image1, image2):
+    chosen_layers = list(cam1.keys()) # TODO: Sort By Something
+    sample_cam = cam1[chosen_layers[0]]
+    height, width = sample_cam.shape[1:]
+    all_heatmaps = np.zeros((len(chosen_layers * 2),  height, width), dtype=sample_cam.dtype)
+    for i, layer in enumerate(chosen_layers):
+        all_heatmaps[2*i, :, :] = cam1[layer][0, :, :]
+        all_heatmaps[(2*i) + 1, :, :] = cam2[layer][0, :, :]
+        
+    fig = create_subplots(all_heatmaps, [image1, image2], 
+                          subplot_titles=None, row_titles=chosen_layers, col_titles=["Image 1", "Image 2"]) 
+    fig.update_layout(title_text="GradCAM - Image Comparisons")
+    return fig
 
 # all_heatmaps : N, W, H
 # subplot_titles should be None if no names are to be used
-def create_subplots(all_heatmaps, image, subplot_titles, row_titles, col_titles):
-    print(type(image))
+def create_subplots(all_heatmaps, col_images, subplot_titles, row_titles, col_titles):
     num_heatmaps, y_shape, x_shape = all_heatmaps.shape
     num_col = 2
     num_row = math.ceil(num_heatmaps / num_col)
@@ -54,7 +65,7 @@ def create_subplots(all_heatmaps, image, subplot_titles, row_titles, col_titles)
         c = (i % num_col) + 1
         
         fig.add_layout_image(dict(
-                  source=image, 
+                  source=col_images[c - 1], 
                   xref=f"x{i + 1}",
                   yref=f"y{i + 1}",
                   x=0, 
